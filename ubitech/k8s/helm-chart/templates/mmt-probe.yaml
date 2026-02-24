@@ -1,0 +1,74 @@
+{{- if .Values.mmtProbe.enabled }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mmt-probe
+  annotations:
+    {{- range $k, $v := .Values.mmtProbe.deployment.annotations }}
+    {{ $k }}: {{ $v | quote }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.mmtProbe.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      app: mmt-probe
+  template:
+    metadata:
+      labels:
+        app: mmt-probe
+    spec:
+      {{- if .Values.nodeSelector.enabled }}
+      nodeSelector:
+        kubernetes.io/hostname: {{ .Values.nodeSelector.hostname }}
+      {{- end }}
+      containers:
+      - name: mmt-probe
+        image: "{{ .Values.mmtProbe.deployment.image.repository }}:{{ .Values.mmtProbe.deployment.image.tag }}"
+        imagePullPolicy: {{ .Values.mmtProbe.deployment.image.pullPolicy }}
+        env:
+        {{- range $k, $v := .Values.mmtProbe.deployment.env }}
+        - name: "{{ $k }}"
+          value: "{{ $v }}"
+        {{- end }}
+        command: {{ toJson .Values.mmtProbe.deployment.command }}
+        args:
+          - "-c"
+          # run nc to listen on UDP port 5000
+          #  then stream data to MMT-Probe
+          - >
+            apt install -y netcat && while true; do
+            date;
+            nc -vlp 5000 | mmt-probe -t-
+            -Xprobe-id=5
+            -Xkafka-output.enable=true
+            -Xkafka-output.hostname=kafka
+            -Xkafka-output.port=9092
+            -Xkafka-output.topic=mmt-reports
+            -Xsession-report.output-channel=kafka
+            -Xsecurity.enable=true
+            -Xsecurity.ignore-remain-flow=DPI
+            -Xsecurity.exclude-rules=0-89,100-1000
+            -Xsecurity.output-channel=kafka,stdout
+            ; date; done
+        resources:
+{{ toYaml .Values.mmtProbe.deployment.resources | indent 10 }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mmt
+  labels:
+    app: mmt
+spec:
+  selector:
+    app: mmt-probe
+  ports:
+    - name: mmt
+      port: {{ .Values.mmtProbe.service.port }}
+      targetPort: {{ .Values.mmtProbe.service.port }}
+      protocol: TCP
+
+{{- end }}

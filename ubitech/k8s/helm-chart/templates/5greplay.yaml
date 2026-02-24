@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: replay5g
+spec:
+  replicas: {{ .Values.replay5g.replicaCount }}
+  selector:
+    matchLabels:
+      app: replay5g
+  template:
+    metadata:
+      labels:
+        app: replay5g
+      annotations:
+        {{- range $key, $value := .Values.replay5g.annotations }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+    spec:
+      {{- if .Values.nodeSelector.enabled }}
+      nodeSelector:
+        kubernetes.io/hostname: {{ .Values.nodeSelector.hostname }}
+      {{- end }}
+      containers:
+      - name: replay5g
+        image: "{{ .Values.replay5g.image.repository }}:{{ .Values.replay5g.image.tag }}"
+        imagePullPolicy: {{ .Values.replay5g.image.pullPolicy }}
+        command: {{ toJson .Values.replay5g.command }}
+        args: {{ toJson .Values.replay5g.args }}
+        securityContext:
+          capabilities:
+            add:
+              {{- range .Values.replay5g.securityCapabilities.add }}
+              - {{ . }}
+              {{- end }}

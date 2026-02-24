@@ -1,0 +1,332 @@
+# Default values for mychart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Enable nodeSelector for all deployments
+nodeSelector:
+  enabled: false
+  hostname: ""
+
+# Configuration for 5greplay deployment
+replay5g:
+  replicaCount: 0
+  
+  image:
+    repository: ghcr.io/montimage/5greplay
+    tag: latest
+    pullPolicy: Always
+  
+  command: ["/bin/bash"]
+
+  args: ["-c", "apt install -y tcpdump netcat iputils-ping vim; while true; do ping localhost; sleep 60;done"]
+
+  # 本地环境先不用额外的 macvlan 网络注解
+  # annotations:
+  #   k8s.v1.cni.cncf.io/networks: monitor-macvlan-net
+
+  securityCapabilities:
+    add:
+      - NET_ADMIN
+      - NET_RAW
+
+# Configuration for Netshoot deployment
+netshoot:
+  replicaCount: 1
+
+  image:
+    repository: nicolaka/netshoot
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  command: ["/bin/bash"]
+
+  args: ["-c", "while true; do ping localhost; sleep 60;done"]
+
+# Configuration for MongoDB deployment
+mongodb:
+  enabled: true
+
+  storageClass:
+    name: mmt-database-storageclass
+    allowVolumeExpansion: true
+    volumeBindingMode: WaitForFirstConsumer
+
+  persistentVolume:
+    name: mmt-database-pv
+    size: 2Gi
+    hostPath: /tmp/.mmt-database
+
+  persistentVolumeClaim:
+    name: mmt-database-pvc
+    size: 1Gi
+
+  deployment:
+    replicaCount: 1
+
+    image:
+      repository: mongo
+      tag: "8"
+
+    args: ["--dbpath", "/data/db"]
+
+  service:
+    port: 27017
+
+# Configuration for Zookeeper deployment
+zookeeper:
+  enabled: true
+
+  service:
+    port: 2181
+
+  deployment:
+    replicaCount: 1
+
+    image:
+      repository: ubuntu/zookeeper
+      tag: edge
+
+# Configuration for Kafka deployment
+kafka:
+  enabled: true
+
+  service:
+    port: 9092
+
+  deployment:
+    replicaCount: 1
+
+    image:
+      repository: ubuntu/kafka
+      tag: edge
+
+  env:
+    zookeeperHost: zookeeper
+    zookeeperPort: "2181"
+
+  args:
+    - "/etc/kafka/server.properties"
+    - "--override"
+    - "advertised.listeners=PLAINTEXT://kafka:9092"
+    - "--override"
+    - "log.retention.hours=1"
+    - "--override"
+    - "log.retention.bytes=134217728"
+    - "--override"
+    - "log.retention.check.interval.ms=10000"
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+      ephemeral-storage: "1Gi"
+
+# Configuration for macvlan network for monitoring
+monitoringPlan:
+  enabled: false
+
+  name: monitor-macvlan-net
+  #namespace: montimage
+
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "eth0",
+      "mode": "bridge",
+      "ipam": {
+        "type": "static",
+        "addresses": [
+          { "address": "10.100.50.249/29" }
+        ]
+      }
+    }
+
+# Configuration for MMT-Probe deployment
+mmtProbe:
+  enabled: true
+
+  deployment:
+    replicaCount: 1
+
+    # 本地先不用 macvlan 网络
+    # annotations:
+    #   k8s.v1.cni.cncf.io/networks: monitor-macvlan-net
+
+    image:
+      repository: ghcr.io/montimage/mmt-probe
+      tag: v1.6.1
+      pullPolicy: Always
+
+    env:
+      MMT_SEC_5G_DOS_NGAP_INITIALUEMESSAGE_MS_LIMIT: "100"
+      MMT_SEC_5G_DOS_HTTP2_MS_LIMIT: "80"
+
+    command: ["/bin/bash"]
+
+    args: |
+      apt install -y netcat && while true; do
+      date;
+      nc -vlp 5000 | mmt-probe -t- 
+      -Xprobe-id=5
+      -Xkafka-output.enable=true
+      -Xkafka-output.hostname=kafka
+      -Xkafka-output.port=9092
+      -Xkafka-output.topic=mmt-reports
+      -Xsession-report.output-channel=kafka
+      -Xsecurity.enable=true
+      -Xsecurity.ignore-remain-flow=DPI
+      -Xsecurity.exclude-rules=0-89,100-1000
+      -Xsecurity.output-channel=kafka,stdout
+      ; date; done
+
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+
+  service:
+    port: 5000
+
+# Configuration for MMT-Operator deployment
+mmtOperator:
+  enabled: true
+
+  deployment:
+    replicaCount: 1
+    nodeSelector:
+      kubernetes.io/hostname: nsit-intact-w0
+
+    image:
+      repository: ghcr.io/montimage/mmt-operator
+      tag: v1.7.7
+      pullPolicy: Always
+
+    args:
+      - "-Xprobe_analysis_mode=online"
+      - "-Xdatabase_server.host=mmt-database"
+      - "-Xinput_mode=kafka"
+      - "-Xkafka_input={}"
+      - "-Xkafka_input.host=kafka"
+      - "-Xkafka_input.port=9092"
+      - "-Xkafka_input.topic=mmt-reports"
+      - '-Xmodules=["link","network","dpi","security","application","gnodeb"]'
+
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+
+  service:
+    port: 8080
+    nodePort: 30010
+
+
+# # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+# replicaCount: 1
+# 
+# # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+# image:
+#   repository: nginx
+#   # This sets the pull policy for images.
+#   pullPolicy: IfNotPresent
+#   # Overrides the image tag whose default is the chart appVersion.
+#   tag: ""
+#
+# # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+# imagePullSecrets: []
+# # This is to override the chart name.
+# nameOverride: ""
+# fullnameOverride: ""
+#
+# # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+# serviceAccount:
+#   # Specifies whether a service account should be created.
+#   create: true
+#   # Automatically mount a ServiceAccount's API credentials?
+#   automount: true
+#   # Annotations to add to the service account.
+#   annotations: {}
+#   # The name of the service account to use.
+#   # If not set and create is true, a name is generated using the fullname template.
+#   name: ""
+#
+# # This is for setting Kubernetes Annotations to a Pod.
+# # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+# podAnnotations: {}
+# # This is for setting Kubernetes Labels to a Pod.
+# # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+# podLabels: {}
+#
+# podSecurityContext: {}
+#   # fsGroup: 2000
+#
+# securityContext: {}
+#   # capabilities:
+#   #   drop:
+#   #   - ALL
+#   # readOnlyRootFilesystem: true
+#   # runAsNonRoot: true
+#   # runAsUser: 1000
+#
+# # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+# service:
+#   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+#   type: ClusterIP
+#   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+#   port: 80
+#
+# # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
+# ingress:
+#   enabled: false
+#   className: ""
+#   annotations: {}
+#     # kubernetes.io/ingress.class: nginx
+#     # kubernetes.io/tls-acme: "true"
+#   hosts:
+#     - host: chart-example.local
+#       paths:
+#         - path: /
+#           pathType: ImplementationSpecific
+#   tls: []
+#
+# httpRoute:
+#   enabled: false
+#   annotations: {}
+#   parentRefs:
+#   - name: gateway
+#     sectionName: http
+#   hostnames:
+#   - chart-example.local
+#   rules:
+#   - matches:
+#     - path:
+#         type: PathPrefix
+#         value: /headers
+#
+# resources: {}
+#
+# livenessProbe:
+#   httpGet:
+#     path: /
+#     port: http
+# readinessProbe:
+#   httpGet:
+#     path: /
+#     port: http
+#
+# autoscaling:
+#   enabled: false
+#   minReplicas: 1
+#   maxReplicas: 100
+#   targetCPUUtilizationPercentage: 80
+#
+# volumes: []
+# volumeMounts: []
+# nodeSelector: {}
+# tolerations: []
+# affinity: {}
+

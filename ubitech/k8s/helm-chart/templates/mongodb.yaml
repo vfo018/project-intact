@@ -1,0 +1,87 @@
+{{- if .Values.mongodb.enabled }}
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .Values.mongodb.storageClass.name }}
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: {{ .Values.mongodb.storageClass.volumeBindingMode }}
+allowVolumeExpansion: {{ .Values.mongodb.storageClass.allowVolumeExpansion }}
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Values.mongodb.persistentVolume.name }}
+spec:
+  capacity:
+    storage: {{ .Values.mongodb.persistentVolume.size }}
+  volumeMode: Filesystem
+  accessModes: [ "ReadWriteOnce" ]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: {{ .Values.mongodb.storageClass.name }}
+  hostPath:
+    path: {{ .Values.mongodb.persistentVolume.hostPath }}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.mongodb.persistentVolumeClaim.name }}
+spec:
+  storageClassName: {{ .Values.mongodb.storageClass.name }}
+  accessModes: [ "ReadWriteOnce" ]
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: {{ .Values.mongodb.persistentVolumeClaim.size }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mmt-database
+spec:
+  replicas: {{ .Values.mongodb.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      app: mmt-database
+  template:
+    metadata:
+      labels:
+        app: mmt-database
+    spec:
+      {{- if .Values.nodeSelector.enabled }}
+      nodeSelector:
+        kubernetes.io/hostname: {{ .Values.nodeSelector.hostname }}
+      {{- end }}
+      containers:
+      - name: mmt-database
+        image: "{{ .Values.mongodb.deployment.image.repository }}:{{ .Values.mongodb.deployment.image.tag }}"
+        args: {{ toJson .Values.mongodb.deployment.args }}
+        volumeMounts:
+        - name: mmt-database-dir
+          mountPath: /data/db
+      volumes:
+      - name: mmt-database-dir
+        persistentVolumeClaim:
+          claimName: {{ .Values.mongodb.persistentVolumeClaim.name }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mmt-database
+  labels:
+    app: mmt-database
+spec:
+  selector:
+    app: mmt-database
+  ports:
+  - name: mongo
+    port: {{ .Values.mongodb.service.port }}
+    targetPort: {{ .Values.mongodb.service.port }}
+    protocol: TCP
+
+{{- end }}

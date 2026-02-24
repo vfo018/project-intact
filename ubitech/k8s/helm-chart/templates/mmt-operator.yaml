@@ -1,0 +1,49 @@
+{{- if .Values.mmtOperator.enabled }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mmt-operator
+spec:
+  replicas: {{ .Values.mmtOperator.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      app: mmt-operator
+  template:
+    metadata:
+      labels:
+        app: mmt-operator
+    spec:
+      {{- if .Values.nodeSelector.enabled }}
+      nodeSelector:
+        kubernetes.io/hostname: {{ .Values.nodeSelector.hostname }}
+      {{- end }}
+      containers:
+      - name: mmt-operator
+        image: "{{ .Values.mmtOperator.deployment.image.repository }}:{{ .Values.mmtOperator.deployment.image.tag }}"
+        imagePullPolicy: {{ .Values.mmtOperator.deployment.image.pullPolicy }}
+        args: {{ toJson .Values.mmtOperator.deployment.args }}
+        ports:
+          - containerPort: {{ .Values.mmtOperator.service.port }}
+        resources:
+{{ toYaml .Values.mmtOperator.deployment.resources | indent 10 }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mmt-operator
+  labels:
+    app: mmt-operator
+spec:
+  type: NodePort
+  selector:
+    app: mmt-operator
+  ports:
+  - port: {{ .Values.mmtOperator.service.port }}
+    targetPort: {{ .Values.mmtOperator.service.port }}
+    protocol: TCP
+    nodePort: {{ .Values.mmtOperator.service.nodePort }}
+
+{{- end }}

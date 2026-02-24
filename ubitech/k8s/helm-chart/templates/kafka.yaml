@@ -1,0 +1,51 @@
+{{- if .Values.kafka.enabled }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  labels:
+    app: kafka
+spec:
+  ports:
+  - port: {{ .Values.kafka.service.port }}
+  selector:
+    app: kafka
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+spec:
+  replicas: {{ .Values.kafka.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      {{- if .Values.nodeSelector.enabled }}
+      nodeSelector:
+        kubernetes.io/hostname: {{ .Values.nodeSelector.hostname }}
+      {{- end }}
+      containers:
+      - name: kafka
+        image: "{{ .Values.kafka.deployment.image.repository }}:{{ .Values.kafka.deployment.image.tag }}"
+        env:
+        - name: ZOOKEEPER_HOST
+          value: {{ .Values.kafka.env.zookeeperHost | quote }}
+        - name: ZOOKEEPER_PORT
+          value: {{ .Values.kafka.env.zookeeperPort | quote }}
+        args: {{ toJson .Values.kafka.args }}
+        ports:
+        - containerPort: {{ .Values.kafka.service.port }}
+          name: kafka
+          protocol: TCP
+        resources:
+{{ toYaml .Values.kafka.resources | indent 10 }}
+
+{{- end }}

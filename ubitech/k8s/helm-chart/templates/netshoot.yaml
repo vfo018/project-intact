@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netshoot
+spec:
+  replicas: {{ .Values.netshoot.replicaCount }}
+  selector:
+    matchLabels:
+      app: netshoot
+  template:
+    metadata:
+      labels:
+        app: netshoot
+    spec:
+      {{- if .Values.nodeSelector.enabled }}
+      nodeSelector:
+        kubernetes.io/hostname: {{ .Values.nodeSelector.hostname }}
+      {{- end }}
+
+      containers:
+      - name: netshoot
+        image: "{{ .Values.netshoot.image.repository }}:{{ .Values.netshoot.image.tag }}"
+        imagePullPolicy: {{ .Values.netshoot.image.pullPolicy }}
+        command: {{ toJson .Values.netshoot.command }}
+        args: {{ toJson .Values.netshoot.args }}

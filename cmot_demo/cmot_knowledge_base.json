@@ -1,0 +1,711 @@
+{   "topology":[{
+	    "topology_id":1,
+	    "topology_name":"5G topology Nokia",
+	    "topology_description":"",
+	    "nodes":[
+	    	
+	    	{
+	    	"id":11,
+	    	"name":"5GEIR",
+	    	"service_description":"5G-EIR (Equipment Identity Register) is a network component of the 5G Core that checks the status of PEI (Permanent Equipment Identifier) (for example, PEI blacklist status).",
+		 "connections": [{"id":"3","NIC":"N17_5geir","ip":"","name":"AMF"}]
+	    	},
+	    	{
+	    	"id":10,
+	    	"name":"NRF",
+	    	 "service_description":" Network Repository Function offers a centralized database for collecting and distributing data regarding network functions and services. In the context of the 5G network, the NRF function serves as a directory service, enabling other network functions to register their capabilities and services as well as learn about the capabilities and services of other network functions.",
+		 "connections": [{"id":"3","NIC":"Nnrf","ip":"203.45.0.105","name":"AMF"}]
+	    	},
+	      	{
+	    	"id":9,
+	    	"name":"NSSF",
+	    	"service_description":"The 5G architecture's central network component known as NSSF, or Network Slice Selection Function, is in charge of choosing the best network slice for each unique service or application. A network slice is an end-to-end network that is logically isolated and independent and is designed to fulfill the unique requirements of each service or application.",
+		 "connections": [{"id":"3","NIC":"N22_nssf","ip":"203.45.0.107","name":"AMF"}]
+
+	    	},
+	    	{
+	    	"id":8,
+	    	"name":"AUSF",
+	    	"service_description":"The AUSF is in charge of confirming the legitimacy of 5G network users and granting access to restricted network resources. To authenticate the user's identity and create a secure connection, it communicates with other components of the 5G network, such as the user equipment (UE) and the Authentication and Key Agreement (AKA) server.",
+		 "connections": [{"id":"3","NIC":"N12_ausf","ip":"203.45.0.101","name":"AMF"}]
+	    
+	    	}, 
+
+	    	{
+	    	"id":7,
+	    	"name":"UDM",
+	    	 "service_description":"The Unified Data Management function, which goes by the abbreviation UDM, is a crucial component of the 5G architecture and is in charge of securely handling and storing user- and network-related data. A unified view of the user's data and network services is provided by the UDM, which can be thought of as a centralized database of user information and network operations.",
+		 "connections": [
+		 {"id":"3","NIC":"N8_udm","ip":"203.45.0.117","name":"AMF"},
+		 {"id":"5","NIC":"N10_udm","ip":"10.85.245.54","name":"SMF"}]
+	    
+	    	},
+	   	{
+	    	"id":6,
+	    	"name":"PCF",
+	    	"service_description":"PCF, or Policy Control Function, is in charge of controlling policy choices for network access and usage. Through the application of QoS, data use, and network security policies, the PCF function regulates the flow of data traffic between users' devices and the network.",
+		 "connections": [
+		 {"id":"7","NIC":"N15_pcf","ip":"203.45.0.113","name":"AMF"}]
+	    
+	    	},
+	    	{
+	    	"id":5,
+	    	"name":"SMF",
+	    	"service_description":"SMF is in charge of controlling how communication sessions between user equipment (UE) and the network are started, changed, and ended. The SMF function, which is a component of the 5G core network, is closely related to the Access and Mobility Management Function (AMF) and the User Plane Function (UPF).",
+		 "connections": [
+		 {"id":"3","NIC":"N11_smf","ip":"10.85.245.55","name":"AMF"},
+		 {"id":"4","NIC":"N10_smf","ip":"10.85.245.55","name":"UPF"}]
+	    
+	    	},
+	  	{
+	    	"id":4,
+	    	"name":"UPF",
+	      	"service_description":"UPF manages user data flow, directs it to its destination, and offers essential services including network security and quality of service (QoS). By ensuring that user data packets are delivered with the proper speed, reliability, and security, the UPF is in charge of managing data flow across the 5G network.",
+		"connections": [{"id":"5","NIC":"N4_upf","ip":"3.45.20.102","name":"SMF"},{"id":"2","NIC":"N3_upf","ip":"10.100.1.2","name":"gNB"}]
+	    	},
+	     	{
+	    	"id":3,
+	    	"name":"AMF",
+	    	"service_description":"AMF manages tasks like assigning and managing IP addresses, authenticating and authorizing devices to access the network, and selecting the best 5G core network node to handle the user's data traffic based on various aspects like location, network performance, and user policy.",
+		 "connections": [
+		 {"id":"5","NIC":"N11_amf","ip":"10.85.245.16","name":"SMF"},
+		 {"id":"6","NIC":"N15_amf","ip":"10.85.245.19","name":"PCF"},
+		 {"id":"7","NIC":"N8_amf","ip":"10.85.245.15","name":"UDM"},
+		 {"id":"8","NIC":"N12_amf","ip":"10.85.245.17","name":"AUSF"},
+		 {"id":"9","NIC":"N22_amf","ip":"10.85.245.22","name":"NSSF"},
+		 {"id":"10","NIC":"Nnrf_amf","ip":"10.85.245.25","name":"NRF"},
+		 {"id":"2","NIC":"N1/N2_amf","ip":"10.85.245.13","name":"gNB"}
+		 ]
+	       	},
+	   	{
+	    	"id":2,
+	    	"name":"gNB",
+	      	"service_description":"A gNB (gNodeB) is a mobile network component that connects user equipment (UE) to the evolved packet core (EPC). In a mobile network, a gNodeB is the functional equivalent of a base station.",
+		"connections": [{"id":"3","NIC":"N1/N2_gnb","ip":"203.45.0.200","name":"AMF"},{"id":"4","NIC":"N3_gnb","ip":"203.45.1.46","name":"UPF"}]
+	    	},
+	    	{
+	    	"id":1,
+	    	"name":"UE", 
+	       	"ip":"",
+	    	"service_description":"UE, or User Equipment, is the acronym for the client device that connects to the 5G network. Smartphones, computers, IoT devices, and other gadgets that can connect to a 5G network are examples of UE in 5G.",
+		 "connections": [{"id":"2","NIC":"","ip":"","name":"gNB"}]
+	    			
+	    	} ]
+	}  ],
+"vulnerabilities":[{
+		"vulnerability_id":1,
+		"vulnerability_description":"Stack buffer overflow without authentication",
+		"vulnerability_reference":"https://cwe.mitre.org/data/definitions/121.html",
+		"default_likelihood":1,
+		"default_impact":3,
+		"Linked_nodes":[]
+	
+	},
+	{
+		"vulnerability_id":2,
+		"vulnerability_description":"Stack buffer overflow with authentication",
+		"vulnerability_reference":"https://cwe.mitre.org/data/definitions/121.html",
+		"default_likelihood":1,
+		"default_impact":3,
+		"Linked_nodes":[]
+	
+	},
+		{
+		"vulnerability_id":3,
+		"vulnerability_description":"Publicly known password to gain access to the web application",
+		"vulnerability_reference":"https://cwe.mitre.org/data/definitions/766.html",
+		"default_likelihood":1,
+		"default_impact":3,
+		"Linked_nodes":[]
+	
+	},
+	{
+		"vulnerability_id":4,
+		"vulnerability_description":"Denial of service on the application.",
+		"vulnerability_reference":"https://cwe.mitre.org/data/definitions/400.html",
+		"default_likelihood":1,
+		"default_impact":3,
+		"Linked_nodes":[]
+	
+	},	{
+		"vulnerability_id":5,
+		"vulnerability_description":"Denial of service to the PTP process.",
+		"vulnerability_reference":"https://cwe.mitre.org/data/definitions/400.html",
+		"default_likelihood":1,
+		"default_impact":3,
+		"Linked_nodes":[]
+	
+	},
+	{
+		"vulnerability_id":6,
+		"vulnerability_description":"Denial of service in the SMB server",
+		"vulnerability_reference":"https://cwe.mitre.org/data/definitions/400.html",
+		"default_likelihood":1,
+		"default_impact":3,
+		"Linked_nodes":[]
+	
+	}
+	
+	
+	],
+"attacks":[	{	
+	"attack_id":1,
+	"attack_name":"SUCI catcher attack",
+	"attack_description":"In 4G IMSI-Catchers work as a Fake Base Station, i.e., they copy the identity of the real network and actively request the user’s permanent identity (IMSI). Any user within range eventually connects to the IMSI-Catcher and thus unwillingly exposes his or her identity. In 5G, The permanent SUPI (subscription permanent identity) - formerly known as IMSI - is encrypted using the public key of the operator before transmission. The encrypted SUPI is called SUCI.Such attack is no longer possible as such. SUCI Catcher attack then builds upon weaknesses of the Authentication and Key Agreement (AKA) where pre-authentication messages are not protected (with use of cryptographic keys).  Each User establishes the connection with an initial Registration Request message containing its identity. The network proceeds with an Authentication Request and the UE will accept this request if the authentication code check and sequence number check is verified. The SUCI-Catcher attack exploits this. It fetches an authentication challenge associated with the searched-for subscriber’s identity . In this way the authentication request is tailored to this subscriber (X in this figure). Then, it sends this Authentication Request to all connecting UEs. Only the UE that accepts the request is the targeted subscriber.The attack consists in two phases: Discovery Phase : to get the identifier(s) of the PoI (Person(s) of Interest) by any means possible. Attack Phase consisting in two steps Probing Phase : to generate SUCIs from the list of SUPI(s), to send a registration request to the core network with the generated SUCIs and send it back to the newly connected UE hoping that it will answer successfully meaning that we have found our person of interest. Reset AND Sync: to send a registration request with the SUCI of the UE the first time he connected himself to our network allowing us to continue the Probing Phase.",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["AMF"],
+	"Linked_Nics":[	{"name":"N2_amf",
+					"ip":"10.85.245.13"
+	}],
+	"Use case":"UC1.2"
+
+	},
+	{	
+	"attack_id":2,
+	"attack_name":"GAN-based Attack",
+	"attack_description":"In this AI-powered attack scenario, two pre-trained Generative Adversarial Networks (GANs) are utilized to produce malicious Synthetic PFCP Session Deletion and Synthetic PFCP Session Modification flows, which through a custom CSV-to-PCAP parser form a packet level file. The goal of this attack is to disrupt a UE’s connectivity. ",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["UPF"],
+	"Linked_Nics":[	{"name":"N4_upf",
+					"ip":"10.85.245.55"
+			}],
+	"Use case":"UC1.9"
+
+	},
+	{	
+	"attack_id":3,
+	"attack_name":"PFCP Session Deletion DoS",
+	"attack_description":"This attack scenario involves the transmission of malicious PFCP session deletion control messages. The unauthorised PFCP Session Deletion Request is instantiated from the SMF. The target of this attack is the UPF, which handles processes and forwards user data to the DN. The goal of this attack is to disconnect a User Equipment from the DN. ",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["UPF"],
+	"Linked_Nics":[	{"name":"N4_upf",
+					"ip":"10.85.245.55"
+				}],
+	"Use case":"UC1.2"
+
+	},
+	{	
+	"attack_id":4,
+	"attack_name":"PFCP Session Establishment Flood",
+	"attack_description":"The PFCP Flood attack is instantiated from the SMF of the 5G core network. The target of this attack is the UPF, which handles processes and forwards user data to the DN. The goal of this flood attack is the exhaustion of the UPF's resources to handle legitimate Session Establishment Requests and Heartbeat Requests. This will potentially hinder the capability of the 5G core to successfully formulate new PDU sessions between clients and DN.",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["UPF"],
+	"Linked_Nics":[	{"name":"N4_upf",
+					"ip":"10.85.245.55"
+			}],
+	"Use case":"UC1.2"
+
+	},
+	{	
+	"attack_id":5,
+	"attack_name":"PFCP Session Modification DoS – DROP Flag",
+	"attack_description":"In this scenario, the goal of the adversary is to get the UPF to discard packet handling settings. The malicious user sends a PFCP Session Modification Request with a DROP flag in the Apply Action field in the FAR rules. This will result in turn in the Tunnel Endpoint Identifier (TEID) and IP address of the gNB being deleted from the UPF.",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["UPF"],
+	"Linked_Nics":[	{"name":"N4_upf",
+					"ip":"10.85.245.55"
+					}],
+	"Use case":"UC1.2"
+
+	},
+	{	
+	"attack_id":6,
+	"attack_name":"PFCP Session Modification DoS – DUPL Flag",
+	"attack_description":"In this scenario, the goal of the adversary is to get the UPF to diplicate packet handling settings. The malicious user sends a PFCP Session Modification Request with a DUPL flag in the Apply Action field in the FAR rules. This will result in turn in the Tunnel Endpoint Identifier (TEID) and IP address of the gNB being duplicated, and the traffic is subsequently forwarded twice per duplication.",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["UPF"],
+	"Linked_Nics":[	{"name":"N4_upf",
+					"ip":"10.85.245.55"
+				}],
+	"Use case":"UC1.2"
+
+	},
+	{	
+	"attack_id":7,
+	"attack_name":"API injection",
+	"attack_description":"API Injection is a type of security vulnerability where an attacker sends untrusted data to an API, leading to the execution of unintended commands or unauthorized access to data. API Injection attacks can also lead to a variety of security issues, including data breaches, data corruption, denial of service, and potentially even complete control over the affected system.",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["AMF","SMF"],
+	"Linked_Nics":[{"name":"N2_amf",
+					"ip":"10.85.245.13"
+				},
+				{"name":"N11_smf",
+				"ip":"10.85.245.55"
+				}],
+	"Use case":"UC1.4"
+
+	},
+	
+	{	
+	"attack_id":8,
+	"attack_name":"Packet poisoning attack - NGAP packet altering",
+	"attack_description":"Within an UE authentication message exchange, we modify the SCTP protocol identifier in any NGAP authentication request from 60 to 0. In such way, we can evaluate the robustness of the AMF function against “malformed packets”.",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["AMF"],
+	"Linked_Nics":[{"name":"N2_amf",
+					"ip":"10.85.245.13"
+				}],
+	"Use case":"UC1.1"
+
+	},
+	{	
+	"attack_id":9,
+	"attack_name":"NAS-5G SMC Replay attack",
+	"attack_description":"ENISA, in its threat landscape for 5G networks mentioned before, reported that AMFs are vulnerable to replay attacks of the NAS Security mode control (SMC) procedure messages. Moreover, the 3GPP TS33.512 specification for the  AMF Security Assurance proposes a test case to verify if an AMF is properly protected against NAS SMC replay attacks. The NAS SMC procedure is initiated by the AMF after a successful authentication of an UE in order to establish a security context that enables encrypted communication between the UE and the AMF. In addition, the AMF could send a NAS SMC message in an already existing security context to change the security algorithm in use. Before the establishment of the security context, the NAS messages are not encrypted. A malicious actor, with access to the NAS traffic in the interface N1, could intercept a NAS SMC (Security Mode command) clear message sent from the AMF to the UE, copy its NAS sequence number (NAS SQN), and use it to build a NAS SMC (Security Mode complete) message that is replayed to the AMF, or directly intercept a NAS SMC (Security Mode complete) message and replay it to the AMF. If the AMF does not implement a proper protection against this type of attack, the network will not drop the replayed packet. Furthermore, a malicious actor could use this technique to impersonate an UE and force the system to reduce the security level by using a weaker security algorithm or turning the security off and, thus, compromise the system.",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["AMF"],
+	"Linked_Nics":[{"name":"N2_amf",
+					"ip":"10.85.245.13"
+				}],
+			
+	"Use case":"UC1.1"
+
+	},
+	{	
+	"attack_id":10,
+	"attack_name":"NGAP flooding attack",
+	"attack_description":"We replay pre-captured traffic from UE to 5G core (AMF mainly) simulating a big number of UEs.",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["AMF"],
+	"Linked_Nics":[{"name":"N2_amf",
+					"ip":"10.85.245.13"
+				}],
+	"Use case":"UC1.1"
+
+	},
+	
+{
+	"attack_id":13,
+	"attack_name":"HTTP2 Flooding of Posts",
+	"attack_description":"When a post method is recognized, 5Greplay firstly edits the stream id and then replicates it a huge number of times in order to saturate the bandwidth of the server.",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["AMF", "SMF", "UPF"],
+	"Linked_Nics":[{"name":"N2_amf",
+				"ip":"10.85.245.13"
+				},
+				{"name":"N11_smf",
+				"ip":"10.85.245.55"
+				},
+				{"name":"N4_upf",
+				"ip":"3.45.20.102"
+				}],
+			
+	"Use case":"UC1.5"
+
+
+},
+	{	
+	"attack_id":14,
+	"attack_name":"HTTP2 Flooding of window update",
+	"attack_description":"Exploitation of the flow control mechanisms introduced by http2. In particular, it sends a number to indicate the maximum size of a frame that can be transmitted through the window_size_increment field. Each time that client sends window update, the server updates its window in order to receive more data, and it implies a resource consumption.",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["AMF", "SMF", "UPF"],
+	"Linked_Nics":[{"name":"N2_amf",
+				"ip":"10.85.245.13"
+				},
+				{"name":"N11_smf",
+				"ip":"10.85.245.55"
+				},
+				{"name":"N4_upf",
+				"ip":"3.45.20.102"
+				}],
+	"Use case":"UC1.5"
+
+	},
+
+
+	{	
+	"attack_id":15,
+	"attack_name":"HTTP2 Fuzzing  payload of Post requests",
+	"attack_description":" Fuzzing is a technique used to change the real data with some random character, even ones not allowed for the protocol, and test the resilience of the serve. In this case payload characters are changed in random way.",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["AMF", "SMF", "UPF"],
+		"Linked_Nics":[{"name":"N2_amf",
+						"ip":"10.85.245.13"
+						},
+						{"name":"N11_smf",
+						"ip":"10.85.245.55"
+						},
+						{"name":"N4_upf",
+						"ip":"3.45.20.102"
+						}],
+	"Use case":"UC1.5"
+
+	},
+	{	
+	"attack_id":16,
+	"attack_name":"HTTP2 Settings attack",
+	"attack_description":"This attack  regards the exploitation of stream feature introduced by http2 in order to saturate the server. In particular, the field SETTINGS MAX CONCURRENT STREAMS is set to maximum value, after this many Get requests are sent on different stream ids, interleaved by window update frame in order to increase the reception window",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["AMF", "SMF", "UPF"],
+	"Linked_Nics":[{"name":"N2_amf",
+					"ip":"10.85.245.13"
+					},
+					{"name":"N11_smf",
+					"ip":"10.85.245.55"
+					},
+					{"name":"N4_upf",
+					"ip":"3.45.20.102"
+					}],
+	"Use case":"UC1.5"
+
+	},
+	{	
+	"attack_id":17,
+	"attack_name":"HTTP2 Flooding of get requests",
+	"attack_description":"When a get method is recognized, 5Greplay firstly edits the stream id and then replicates it in order to saturate the bandwidth of the server.",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["AMF", "SMF", "UPF"],
+	"Linked_Nics":[{"name":"N2_amf",
+					"ip":"10.85.245.13"
+					},
+					{"name":"N11_smf",
+					"ip":"10.85.245.55"
+					},
+					{"name":"N4_upf",
+					"ip":"3.45.20.102"
+					}],
+	"Use case":"UC1.5"
+
+	},
+	{	
+	"attack_id":18,
+	"attack_name":"HTTP2 Fuzzing path",
+	"attack_description":" Fuzzing is a technique used to change the real data with some random character, even ones not allowed for the protocol, and test the resilience of the serve. In this case path characters are changed in random way",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["AMF", "SMF", "UPF"],
+	"Linked_Nics":[{"name":"N2_amf",
+					"ip":"10.85.245.13"
+					},
+					{"name":"N11_smf",
+					"ip":"10.85.245.55"
+					},
+					{"name":"N4_upf",
+					"ip":"3.45.20.102"
+					}],
+	"Use case":"UC1.5"
+
+	},
+	{	
+	"attack_id":19,
+	"attack_name":" Compression attack",
+	"attack_description":" This attack uses very large packets compressed, so when the server will decompress them, it will consume a big amount of resources.",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["AMF", "SMF", "UPF"],
+	"Linked_Nics":[{"name":"N2_amf",
+					"ip":"10.85.245.13"
+					},
+					{"name":"N11_smf",
+					"ip":"10.85.245.55"
+					},
+					{"name":"N4_upf",
+					"ip":"3.45.20.102"
+					}],
+	"Use case":"UC1.5"
+
+	},
+	{	
+	"attack_id":20,
+	"attack_name":"DOS attacks",
+	"attack_description":"The goal of this scenario is to conduct DoS attacks in order to evaluate SANCUS subsystems for rapid attack detection and prevention. The considered attacks include: (i) application layer attacks on HTTPv1 and HTTPv2 services, i.e., HTTP-based flooding attacks are carried out that generate high volumes of HTTP GET requests to make the 5G services unavailable and (ii) UDP and TCP flooding attacks (e.g., on AMF or the PCRF component).UDP Flooding Attack: This attack opens as many UDP sessions as possible using threads and Python sockets aiming to bring down the target's service. TCP Flooding Attack: This attack opens as many TCP sessions as possible using threads and Python sockets aiming to bring down the target's service. HTTP Flooding Attack: This particular attack is based on the Hulk tool, a DoS tool meant to put a heavy load on HTTP servers to bring them to their knees by exhausting the resource pool. Τhis attack also opens as many HTTP sessions as possible using Python threads and urllib2.Slowloris HTTP Flooding attack: Slowloris is a type of denial-of-service (DoS) attack that is designed to overwhelm a web server by consuming its resources. In a Slowloris attack, the attacker sends HTTP requests to a web server, but does not complete the request by sending the necessary headers. Instead, the attacker keeps the connection open and sends small packets of data at a slow rate, one at a time, which prevents the server from closing the connection. This causes the server to run out of available connections, and legitimate users are unable to access the website.",
+	"attack_references":["SANCUS_Attack_Template"],
+	"default_likelihood":2,
+	"default_impact":1,
+	"linked_vulnerabilities":[],
+	"Linked_node":["AMF"],
+	"Linked_Nics":[	{"name":"N2_amf",
+					"ip":"10.85.245.13"
+					}],
+	"Use case":"UC1.5"
+
+	},
+	{	
+		"attack_id":21,
+		"attack_name":"SCTP DOS",
+		"attack_description":"An SCTP Denial of Service (DoS) attack is a type of cyberattack where an attacker aims to disrupt an established SCTP session or connection, thus preventing communication between two endpoints. An attacker can use various methods to achieve this outcome.",
+		"attack_references":["SANCUS_Attack_Template"],
+		"default_likelihood":2,
+		"default_impact":1,
+		"linked_vulnerabilities":[],
+		"Linked_node":["AMF"],
+		"Linked_Nics":[	{"name":"N2_amf",
+						"ip":"10.85.245.13"
+						}],
+		"Use case":"UC1.5"
+	
+		},
+	{	
+		"attack_id":22,
+		"attack_name":"PDU session creation",
+		"attack_description":"In a 5G network, a PDU session refers to the connection established between the user equipment (UE) and the 5G core network. In a PDU session creation the AMF communicates with the SMF, proxying for the creation of a session for the UE. SMF also handles the establishment, modification and release of PDU sessions, while determining the Session and Service Continuity (SSC) mode of a PDU session for the flow of packets across the network. In this scenario, an attacker gains access to the parameters of the established session and impersonates a UDP creating a duplicate session, for which the subscriber will be charged.",
+		"attack_references":["SANCUS_Attack_Template"],
+		"default_likelihood":2,
+		"default_impact":1,
+		"linked_vulnerabilities":[],
+		"Linked_node":["AMF","SMF"],
+		"Linked_Nics":[	{"name":"N11_smf",
+						"ip":"10.85.245.55"
+						}],
+		"Use case":"UC1.5"
+	
+		}
+	],
+	
+"remediation":[
+{
+	"id":"C1",
+	"short_description":"Notify the vendor",
+	"time":[[],[1,1,1,1,1,1,1]],	
+	"energy":[[],[0,0,0,0,0,0,0]],
+	"Monetary_cost":[[],[0,0,0,0,0,0,0]],
+	"Risk_factor_reduction":[[],[1,1,1,1,1,1,1]],
+	"description":[],
+	"Linked_vulnerabilities":["UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_attack":[],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+},
+{
+	"id":"C2",
+	"short_description":"Notify the network operator/provider",
+	"time":  [[1,1,1,1,1,1,1,1,1,1],[]],	
+	"energy":[[0,0,0,0,0,0,0,0,0,0],[]],
+	"Monetary_cost":[[0,0,0,0,0,0,0,0,0],[]],
+	"Risk_factor_reduction":[[1,1,1,1,1,1,1,1,1,1],[]],
+
+	"description":[],
+	"Linked_vulnerabilities":[],
+	"Linked_attack":["UC1.1","UC1.2","UC1.3","UC1.4","UC1.5","UC1.6","UC1.7","UC1.8","UC1.9","UC1.10","UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+},
+{
+	"id":"C3",
+	"short_description":"Block the attacker (or filter the traffic)",
+	"time":[[3,3,4,3,3,3,4,3,4,5],[1,1,1,1,1,1,1,1,1,1]],	
+	"energy":[[0,0,0,0,0,0,0,0,0,0], [2,2,2,2,2,2,2]],
+	"Monetary_cost":[[0,0,0,0,0,0,0,0,0,0],[1,1,1,1,1,1,1]],
+	"Risk_factor_reduction":[[5,5,5,5,5,5,2,5,2,5],[3,3,3,3,3,3,3]],
+	"description":[],
+	"Linked_vulnerabilities":["UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_attack":["UC1.1","UC1.2","UC1.3","UC1.4","UC1.5","UC1.6","UC1.7","UC1.8","UC1.9","UC1.10","UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+},{
+	"id":"C4",
+	"short_description":"Isolate the affected device",
+	"time":   [[1,1,1,1,1,1,1,1,1,1],[2,2,2,2,2,2,2]],	
+	"energy": [[1,1,2,1,1,1,1,1,1,2],[1,1,1,1,1,1,1] ],
+	"Monetary_cost":[[1,1,2,1,1,1,1,1,1,2],[1,1,1,1,1,1,1]],
+	"Risk_factor_reduction":[[3,3,8,3,3,3,3,3,3,3],[4,4,4,4,4,4,4]],
+	"description":[],
+	"Linked_vulnerabilities":["UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_attack":["UC1.1","UC1.2","UC1.3","UC1.4","UC1.5","UC1.6","UC1.7","UC1.8","UC1.9","UC1.10","UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+},{
+	"id":"C5",
+	"short_description":"Relaunch the infected node",
+	"time":  [[6,6,7,6,6,6,6,6,6,6],[]],	
+
+	"energy": [[3,3,3,3,3,3,3,3,3,3],[]],
+	"Monetary_cost":[[1,1,1,1,1,1,1,1,1,1],[]],
+	"Risk_factor_reduction":[[5,6,4,7,7,6,7,5,7,7],[]],
+
+	"description":[],
+	"Linked_vulnerabilities":[],
+	"Linked_attack":["UC1.1","UC1.2","UC1.3","UC1.4","UC1.5","UC1.6","UC1.7","UC1.8","UC1.9","UC1.10","UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+},{
+	"id":"C6",
+	"short_description":"Reconfigure the VNF",	
+	"time":  [[7,7,8,7,6,6,7,5,9,10],[]],	
+	"energy":[[4,4,5,4,4,4,5,4,4,7 ],[]],
+	"Monetary_cost": [[2,2,2,2,3,2,2,2,2,3],[]],
+	"Risk_factor_reduction":[[4,4,1,4,4,4,4,4,4,4],[]],
+	"description":[],
+	"Linked_vulnerabilities":[],
+	"Linked_attack":["UC1.1","UC1.2","UC1.3","UC1.4","UC1.5","UC1.6","UC1.7","UC1.8","UC1.9","UC1.10","UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+},{
+	"id":"C7",
+	"short_description":"Replace the infected node by another less vulnerable",
+	"energy":[[4,4,4,4,4,4,4,4,4,5],[]],
+	"time":  [[8,8,8,8,8,8,8,8,8,8],[]],	
+	"description":[],
+	"Risk_factor_reduction":[[7,8,1,9,9,8,9,7,9,9],[]],
+	"Monetary_cost":[[10,10,10,9,10,9,10,10,10],[]],
+	"Linked_vulnerabilities":[],
+	"Linked_attack":["UC1.1","UC1.2","UC1.3","UC1.4","UC1.5","UC1.6","UC1.7","UC1.8","UC1.9","UC1.10","UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+},{
+	"id":"C8",
+	"short_description":"Change the network topology",
+	"energy":[[6,6,6,6,6,6,6,6,6,6],[]],
+	"time":  [[10,10,10,10,10,10,10,10,10,10],[]],	
+	"description":[],
+	"Risk_factor_reduction":[[5,5,5,5,5,5,2,5,2,5],[]],
+	"Monetary_cost":[[1,1,1,1,1,1,1,1,1,1],[]],
+	"Linked_vulnerabilities":["UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_attack":["UC1.1","UC1.2","UC1.3","UC1.4","UC1.5","UC1.6","UC1.7","UC1.8","UC1.9","UC1.10","UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+},{
+	"id":"C9",
+	"short_description":"Notify the vendor and block the attacker",
+	"energy":[[],[2,2,2,2,2,2,2]],
+	"time":  [[],[2,2,2,2,2,2,2]],	
+	"description":[],
+	"Risk_factor_reduction":[[],[4,4,4,4,4,4,4]],
+	"Monetary_cost":[[],[1,1,1,1,1,1,1]],
+	"Linked_vulnerabilities":["UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_attack":[],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+},
+{
+	"id":"C10",
+	"short_description":"Block the attacker and isolate the device",
+	"energy":[[2,2,3,2,2,2,2,2,3],[3,3,3,3,3,3,3]],
+	"time":[[3,3,4,3,3,3,4,3,4,5],[3,3,3,3,3,3,3]],	
+	"description":[],
+	"Risk_factor_reduction":[[5,5,8,5,5,5,3,5,3,5],[7,7,6,5,7,7,5]],
+	"Monetary_cost":[[1,1,1,1,1,1,1,1,1,2],[2,2,2,2,2,2,2,2]],
+	"Linked_vulnerabilities":["UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_attack":["UC1.1","UC1.2","UC1.3","UC1.4","UC1.5","UC1.6","UC1.7","UC1.8","UC1.9","UC1.10","UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+},
+
+{
+	"id":"C11",
+	"short_description":"Notify the vendor and isolate the device",
+	"energy":[[],[1,1,1,1,1,1,1]],
+	"time":  [[],[3,3,3,3,3,3,3]],	
+	"description":[],
+	"Risk_factor_reduction":[[],[5,5,5,5,5,5,5]],
+	"Monetary_cost":[[],[1,1,1,1,1,1,1]],
+	"Linked_vulnerabilities":["UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_attack":[],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+},
+{
+	"id":"C12",
+	"short_description":"Notify the vendor, block the attacker, and isolate the device",
+	"energy":[[],[4,4,4,4,4,4,4]],
+	"time":  [[],[3,3,3,3,3,3,3]],	
+	"description":[],
+	"Risk_factor_reduction":[[],[8,8,6,5,7,8,5]],
+	"Monetary_cost":[[],[2,2,2,2,2,2,2]],
+	"Linked_vulnerabilities":["UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_attack":[],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+},{
+	"id":"C13",
+	"short_description":"Notify the network operator/provider and block the attacker",
+	"energy":[[1,1,1,1,1,1,1,1,1,1],[]],
+	"time":  [[4,4,5,4,4,4,5,4,5,6],[]],	
+	"description":[],
+	"Risk_factor_reduction":[[5,6,4,7,7,6,7,5,7,7],[]],
+	"Monetary_cost":[[1,1,1,1,1,1,1,1,1,1],[]],
+	"Linked_vulnerabilities":[],
+	"Linked_attack":["UC1.1","UC1.2","UC1.3","UC1.4","UC1.5","UC1.6","UC1.7","UC1.8","UC1.9","UC1.10","UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+},{
+	"id":"C14",
+	"short_description":"Notify the network operator/provider and isolate the device",
+	"energy":[[1,1,2,1,1,1,1,1,1,2],[]],
+	"time":  [[2,2,2,2,2,2,2,2,2,2],[]],	
+	"description":[],
+	"Risk_factor_reduction":[[3,3,8,3,3,3,3,3,3,3],[]],
+	"Monetary_cost":[[1,1,1,1,1,1,1,1,1,1],[]],
+	"Linked_vulnerabilities":[],
+	"Linked_attack":["UC1.1","UC1.2","UC1.3","UC1.4","UC1.5","UC1.6","UC1.7","UC1.8","UC1.9","UC1.10","UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+},{
+	"id":"C15",
+	"short_description":"Notify the network operator/provider and block the attacker and isolate the device",
+	"energy":[[2,2,3,2,2,2,2,2,2,3],[]],
+	"time":  [[5,5,6,5,5,5,6,4,6,6],[]],	
+	"description":[],
+	"Risk_factor_reduction":[[8,7,1,9,9,8,9,7,9,9],[]],
+	"Monetary_cost":[[2,2,2,2,2,2,2,2,2,2],[]],
+	"Linked_vulnerabilities":[],
+	"Linked_attack":["UC1.1","UC1.2","UC1.3","UC1.4","UC1.5","UC1.6","UC1.7","UC1.8","UC1.9","UC1.10","UC2.1","UC2.2","UC2.3","UC2.4","UC2.5","UC2.6","UC2.7"],
+	"Linked_node":["AMF","SMF","UPF"],
+	"node_ids":""
+
+}
+]}

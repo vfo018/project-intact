@@ -1,0 +1,43 @@
+{{- if .Values.zookeeper.enabled }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper
+  labels:
+    app: zookeeper
+spec:
+  ports:
+  - port: {{ .Values.zookeeper.service.port }}
+  selector:
+    app: zookeeper
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+spec:
+  replicas: {{ .Values.zookeeper.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+    spec:
+      {{- if .Values.nodeSelector.enabled }}
+      nodeSelector:
+        kubernetes.io/hostname: {{ .Values.nodeSelector.hostname }}
+      {{- end }}
+      containers:
+      - name: zookeeper
+        image: "{{ .Values.zookeeper.deployment.image.repository }}:{{ .Values.zookeeper.deployment.image.tag }}"
+        ports:
+        - containerPort: {{ .Values.zookeeper.service.port }}
+          name: zookeeper
+          protocol: TCP
+
+{{- end }}
