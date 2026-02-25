@@ -1,0 +1,6 @@
+apiVersion: v2
+name: intact-kafka-tools
+description: Helm chart for INTACT Kafka-based STIX tools (mitigator, attack simulator, response consumer)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

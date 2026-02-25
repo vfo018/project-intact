@@ -1,0 +1,60 @@
+{{- if .Values.mitigator.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "intact-kafka-tools.fullname" . }}-mitigator
+  labels:
+    {{- include "intact-kafka-tools.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mitigator
+spec:
+  replicas: {{ .Values.mitigator.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "intact-kafka-tools.name" . }}
+      app.kubernetes.io/component: mitigator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "intact-kafka-tools.name" . }}
+        app.kubernetes.io/component: mitigator
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: mitigator
+          image: "{{ .Values.global.image.repository }}:{{ .Values.global.image.tag }}"
+          imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: {{ .Values.global.kafkaBootstrapServers | quote }}
+            - name: IN_TOPIC
+              value: {{ .Values.mitigator.env.IN_TOPIC | quote }}
+            - name: OUT_TOPIC
+              value: {{ .Values.mitigator.env.OUT_TOPIC | quote }}
+            - name: MODE
+              value: {{ .Values.mitigator.env.MODE | quote }}
+            - name: GROUP_ID
+              value: {{ .Values.mitigator.env.GROUP_ID | quote }}
+            - name: CLIENT_ID
+              value: {{ .Values.mitigator.env.CLIENT_ID | quote }}
+            - name: AUTO_OFFSET_RESET
+              value: {{ .Values.mitigator.env.AUTO_OFFSET_RESET | quote }}
+            - name: KEEP_ORIGINAL_BUNDLE_ID
+              value: {{ .Values.mitigator.env.KEEP_ORIGINAL_BUNDLE_ID | quote }}
+            - name: DECIDED_BY
+              value: {{ .Values.mitigator.env.DECIDED_BY | quote }}
+            - name: DEFAULT_CONFIDENCE
+              value: {{ .Values.mitigator.env.DEFAULT_CONFIDENCE | quote }}
+            - name: BLOCK_DURATION_SEC
+              value: {{ .Values.mitigator.env.BLOCK_DURATION_SEC | quote }}
+            - name: PRINT_IO_JSON
+              value: {{ .Values.mitigator.env.PRINT_IO_JSON | quote }}
+            - name: PRINT_SUMMARY
+              value: {{ .Values.mitigator.env.PRINT_SUMMARY | quote }}
+            - name: MAX_JSON_CHARS
+              value: {{ .Values.mitigator.env.MAX_JSON_CHARS | quote }}
+          resources:
+            {{- toYaml .Values.mitigator.resources | nindent 12 }}
+{{- end }}
