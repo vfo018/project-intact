@@ -1,4 +1,4 @@
-# project-intact
+# Project-Intact
 
 This repository contains integration scripts, deployment assets, and prototype components used for the INTACT project experiments and demonstrations.
 
