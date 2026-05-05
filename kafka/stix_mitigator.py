@@ -4,16 +4,16 @@
 """
 Mitigator for real MMT STIX reports.
 
-Joint test logic:
-- Consume real STIX alerts from Kafka topic: mmt-reports
+Robust version:
+- Consume messages from Kafka topic: mmt-reports
+- Read each Kafka message as raw text, not directly as JSON
+- Extract all valid JSON objects from the raw text
+- Process only valid STIX bundles: {"type": "bundle", "objects": [...]}
+- Skip non-STIX/raw/CSV messages instead of crashing
 - Add mitigation information into observed-data.extensions["x-mitigation-ext"]
 - Current demo supports only one countermeasure:
     C8 = Notify + Block
-- Produce enriched STIX bundle to OUT_TOPIC, default: response_topic_v2
-
-Important:
-- This script does NOT generate simulated attacks.
-- It only consumes existing STIX alerts already published by UBITECH/MMT.
+- Produce enriched STIX bundle to OUT_TOPIC, default: ulanc-response-mitigator
 """
 
 import os
@@ -29,18 +29,15 @@ from kafka import KafkaConsumer, KafkaProducer
 # Config
 # ------------------------------------------------------------
 
-# Helm will overwrite this with .Values.global.kafkaBootstrapServers.
-# This value is only a local fallback.
 KAFKA_BOOTSTRAP_SERVERS = os.getenv(
     "KAFKA_BOOTSTRAP_SERVERS",
     "51.178.36.152:9092",
 )
 
 # UBITECH / Montimage real STIX alert topic.
-# Email says mmt-reports, with hyphen.
 IN_TOPIC = os.getenv("IN_TOPIC", "mmt-reports")
 
-# ULANC output topic for STIX with mitigation.
+# ULANCS output topic for STIX with mitigation.
 OUT_TOPIC = os.getenv("OUT_TOPIC", "ulanc-response-mitigator")
 
 GROUP_ID = os.getenv("GROUP_ID", "stix-mitigator")
@@ -60,7 +57,6 @@ MAX_JSON_CHARS = int(os.getenv("MAX_JSON_CHARS", "12000"))
 MITIGATION_EXTENSION_KEY = "x-mitigation-ext"
 
 # Current demo supports only Notify + Block.
-# In your countermeasure model:
 # C1 = Notify the network operator/provider
 # C2 = Block the attacker
 # C8 = C1 + C2 = Notify + Block
@@ -97,11 +93,112 @@ def dump_json(obj: dict) -> str:
     return text
 
 
+def preview_text(text: str, max_chars: int = 200) -> str:
+    """
+    Create a short one-line preview for logs.
+    """
+    text = text.replace("\n", "\\n").replace("\r", "\\r")
+    if len(text) > max_chars:
+        return text[:max_chars] + "..."
+    return text
+
+
+# ------------------------------------------------------------
+# Robust Kafka message parsing
+# ------------------------------------------------------------
+
+def extract_json_objects_from_text(raw_text: str) -> list:
+    """
+    Extract JSON objects embedded in raw Kafka text.
+
+    This handles messages like:
+
+    1,5,"-",1777991883.821386,...       # non-STIX/raw line
+    {
+      "type": "bundle",
+      ...
+    }
+    {
+      "type": "bundle",
+      ...
+    }
+
+    It scans for '{' and tries json.JSONDecoder.raw_decode() from that position.
+    Non-JSON parts are skipped.
+    """
+    decoder = json.JSONDecoder()
+    objects = []
+    index = 0
+    text_len = len(raw_text)
+
+    while index < text_len:
+        start = raw_text.find("{", index)
+
+        if start == -1:
+            break
+
+        try:
+            obj, end = decoder.raw_decode(raw_text[start:])
+            objects.append(obj)
+            index = start + end
+        except json.JSONDecodeError:
+            index = start + 1
+
+    return objects
+
+
+def is_stix_bundle(obj) -> bool:
+    """
+    A minimal STIX bundle check.
+    """
+    return (
+        isinstance(obj, dict)
+        and obj.get("type") == "bundle"
+        and isinstance(obj.get("objects"), list)
+    )
+
+
+def collect_stix_bundles(obj) -> list:
+    """
+    Collect valid STIX bundles from a parsed JSON object.
+
+    Normally obj is a dict bundle.
+    This also supports a JSON list containing bundles.
+    """
+    bundles = []
+
+    if is_stix_bundle(obj):
+        bundles.append(obj)
+        return bundles
+
+    if isinstance(obj, list):
+        for item in obj:
+            bundles.extend(collect_stix_bundles(item))
+
+    return bundles
+
+
+def extract_stix_bundles_from_raw_message(raw_text: str) -> list:
+    """
+    Main parser for Kafka message values.
+
+    It does not assume the whole Kafka message is JSON.
+    It extracts all JSON objects from the raw text and returns only STIX bundles.
+    """
+    json_objects = extract_json_objects_from_text(raw_text)
+
+    bundles = []
+    for obj in json_objects:
+        bundles.extend(collect_stix_bundles(obj))
+
+    return bundles
+
+
 # ------------------------------------------------------------
 # STIX helpers
 # ------------------------------------------------------------
 
-def find_objects(bundle: dict, stix_type: str) -> list[dict]:
+def find_objects(bundle: dict, stix_type: str) -> list:
     return [
         obj
         for obj in bundle.get("objects", [])
@@ -117,12 +214,12 @@ def index_by_id(bundle: dict) -> dict:
     }
 
 
-def get_first_observed_data(bundle: dict) -> dict | None:
+def get_first_observed_data(bundle: dict):
     observed_objects = find_objects(bundle, "observed-data")
     return observed_objects[0] if observed_objects else None
 
 
-def get_attack_object(bundle: dict, observed: dict) -> dict | None:
+def get_attack_object(bundle: dict, observed: dict):
     """
     Find x-attack-type object.
 
@@ -140,24 +237,16 @@ def get_attack_object(bundle: dict, observed: dict) -> dict | None:
     return attack_objects[0] if attack_objects else None
 
 
-def extract_ipv4_addresses(bundle: dict, observed: dict) -> list[str]:
+def extract_ipv4_addresses(bundle: dict, observed: dict) -> list:
     """
     Return IPv4 addresses in the same order as observed-data.object_refs.
 
     Current assumption:
     - first IPv4 = attacker/source IP
     - second IPv4 = victim/destination IP
-
-    Your current mmt_reports.json has:
-    - 10.100.50.249
-    - 10.100.50.248
-
-    So this code will block 10.100.50.249.
-    If UBITECH confirms the order is opposite, only swap attacker_ip and victim_ip
-    inside build_response_bundle().
     """
     objects_by_id = index_by_id(bundle)
-    ips: list[str] = []
+    ips = []
 
     for ref in observed.get("object_refs", []):
         obj = objects_by_id.get(ref)
@@ -167,7 +256,7 @@ def extract_ipv4_addresses(bundle: dict, observed: dict) -> list[str]:
     return ips
 
 
-def get_observed_description(observed: dict) -> str | None:
+def get_observed_description(observed: dict):
     extensions = observed.get("extensions", {})
     if not isinstance(extensions, dict):
         return None
@@ -179,7 +268,7 @@ def get_observed_description(observed: dict) -> str | None:
     return None
 
 
-def get_attack_name(observed: dict, attack_obj: dict | None) -> str:
+def get_attack_name(observed: dict, attack_obj: dict) -> str:
     if isinstance(attack_obj, dict) and attack_obj.get("name"):
         return attack_obj["name"]
 
@@ -190,7 +279,7 @@ def get_attack_name(observed: dict, attack_obj: dict | None) -> str:
     return "Unknown attack"
 
 
-def get_external_id(attack_obj: dict | None) -> str | None:
+def get_external_id(attack_obj: dict):
     if not isinstance(attack_obj, dict):
         return None
 
@@ -201,7 +290,7 @@ def get_external_id(attack_obj: dict | None) -> str | None:
     return None
 
 
-def infer_attack_uc(observed: dict, attack_obj: dict | None) -> str:
+def infer_attack_uc(observed: dict, attack_obj: dict) -> str:
     """
     Infer attack UC only as metadata.
 
@@ -214,7 +303,7 @@ def infer_attack_uc(observed: dict, attack_obj: dict | None) -> str:
 
     text = f"{external_id or ''} {attack_name} {description}".lower()
 
-    # Current sample:
+    # Current MMT sample:
     # external_id 92 = NGAP packet with wrong SCTP Protocol Identifier
     if external_id == "92":
         return "UC1.3"
@@ -238,7 +327,7 @@ def infer_attack_uc(observed: dict, attack_obj: dict | None) -> str:
 # Mitigation generation
 # ------------------------------------------------------------
 
-def build_notify_block_actions(attacker_ip: str | None, attack_name: str) -> list[dict]:
+def build_notify_block_actions(attacker_ip: str, attack_name: str) -> list:
     return [
         {
             "type": "notify_operator",
@@ -257,20 +346,12 @@ def build_notify_block_actions(attacker_ip: str | None, attack_name: str) -> lis
     ]
 
 
-def build_response_bundle(in_bundle: dict) -> tuple[dict, dict]:
+def build_response_bundle(in_bundle: dict) -> tuple:
     """
     Add x-mitigation-ext to the incoming STIX bundle.
-
-    Output format:
-    observed-data.extensions.x-mitigation-ext.mitigation
     """
-    if not isinstance(in_bundle, dict):
-        raise ValueError("Incoming Kafka message is not a JSON object.")
-
-    if in_bundle.get("type") != "bundle":
-        raise ValueError(
-            f"Incoming STIX object must be a bundle, got type={in_bundle.get('type')}"
-        )
+    if not is_stix_bundle(in_bundle):
+        raise ValueError("Incoming object is not a valid STIX bundle.")
 
     out_bundle = deepcopy(in_bundle)
 
@@ -372,7 +453,11 @@ def main():
         client_id=CLIENT_ID + "-consumer",
         auto_offset_reset=AUTO_OFFSET_RESET,
         enable_auto_commit=True,
-        value_deserializer=lambda value: json.loads(value.decode("utf-8")),
+
+        # Important:
+        # Do NOT json.loads here.
+        # mmt-reports may contain raw/non-STIX lines before or after STIX bundles.
+        value_deserializer=lambda value: value.decode("utf-8", errors="replace"),
     )
 
     producer = KafkaProducer(
@@ -396,47 +481,67 @@ def main():
 
     try:
         for msg in consumer:
-            try:
-                in_bundle = msg.value
-                out_bundle, info = build_response_bundle(in_bundle)
+            raw_value = msg.value
 
-                if PRINT_IO_JSON:
-                    print("\n" + "=" * 100)
-                    print(
-                        f"=== INCOMING STIX "
-                        f"from topic={msg.topic} "
-                        f"partition={msg.partition} "
-                        f"offset={msg.offset} ==="
-                    )
-                    print(dump_json(in_bundle))
-                    print(f"=== OUTGOING STIX to topic={OUT_TOPIC} ===")
-                    print(dump_json(out_bundle))
-                    print("=" * 100 + "\n")
+            bundles = extract_stix_bundles_from_raw_message(raw_value)
 
-                if PRINT_SUMMARY:
-                    print(
-                        f"[DBG] attack={info['attack_name']} "
-                        f"uc={info['attack_uc']} "
-                        f"external_id={info['external_id']} "
-                        f"countermeasure={info['countermeasure_id']}({info['countermeasure_name']}) "
-                        f"attacker_ip={info['attacker_ip']} "
-                        f"victim_ip={info['victim_ip']} "
-                        f"from={msg.topic} "
-                        f"to={OUT_TOPIC}"
-                    )
-
-                producer.send(OUT_TOPIC, value=out_bundle)
-                producer.flush()
-
+            if not bundles:
                 print(
-                    f"[OK] Produced mitigation STIX: "
-                    f"from_topic={msg.topic} -> to_topic={OUT_TOPIC} "
-                    f"in_bundle={in_bundle.get('id')} "
-                    f"out_bundle={out_bundle.get('id')}"
+                    f"[SKIP] No valid STIX bundle found "
+                    f"topic={msg.topic} partition={msg.partition} offset={msg.offset} "
+                    f"preview={preview_text(raw_value)}"
                 )
+                continue
 
-            except Exception as exc:
-                print(f"[ERR] Failed to process Kafka message: {exc}")
+            print(
+                f"[+] Found {len(bundles)} STIX bundle(s) "
+                f"topic={msg.topic} partition={msg.partition} offset={msg.offset}"
+            )
+
+            for in_bundle in bundles:
+                try:
+                    out_bundle, info = build_response_bundle(in_bundle)
+
+                    if PRINT_IO_JSON:
+                        print("\n" + "=" * 100)
+                        print(
+                            f"=== INCOMING STIX "
+                            f"from topic={msg.topic} "
+                            f"partition={msg.partition} "
+                            f"offset={msg.offset} ==="
+                        )
+                        print(dump_json(in_bundle))
+                        print(f"=== OUTGOING STIX to topic={OUT_TOPIC} ===")
+                        print(dump_json(out_bundle))
+                        print("=" * 100 + "\n")
+
+                    if PRINT_SUMMARY:
+                        print(
+                            f"[DBG] attack={info['attack_name']} "
+                            f"uc={info['attack_uc']} "
+                            f"external_id={info['external_id']} "
+                            f"countermeasure={info['countermeasure_id']}({info['countermeasure_name']}) "
+                            f"attacker_ip={info['attacker_ip']} "
+                            f"victim_ip={info['victim_ip']} "
+                            f"from={msg.topic} "
+                            f"to={OUT_TOPIC}"
+                        )
+
+                    producer.send(OUT_TOPIC, value=out_bundle)
+                    producer.flush()
+
+                    print(
+                        f"[OK] Produced mitigation STIX: "
+                        f"from_topic={msg.topic} -> to_topic={OUT_TOPIC} "
+                        f"in_bundle={in_bundle.get('id')} "
+                        f"out_bundle={out_bundle.get('id')}"
+                    )
+
+                except Exception as exc:
+                    print(
+                        f"[ERR] Failed to process one STIX bundle "
+                        f"topic={msg.topic} partition={msg.partition} offset={msg.offset}: {exc}"
+                    )
 
     except KeyboardInterrupt:
         print("\n[!] Stopped by user.")
