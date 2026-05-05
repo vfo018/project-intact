@@ -1,4 +1,8 @@
 global:
+  image:
+    repository: ghcr.io/vfo018/intact-kafka-tools
+    tag: "0.2.1"
+    pullPolicy: IfNotPresent
   kafkaBootstrapServers: "51.178.36.152:9092"
 
 mitigator:
