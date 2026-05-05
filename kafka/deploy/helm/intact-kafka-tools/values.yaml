@@ -1,71 +1,30 @@
 global:
-  image:
-    repository: ghcr.io/vfo018/intact-kafka-tools
-    tag: "0.1.0"
-    pullPolicy: IfNotPresent
-
   kafkaBootstrapServers: "51.178.36.152:9092"
-
-  topics:
-    inTopic: "test_topic"
-    outTopic: "response_topic_v2"
-
-  imagePullSecrets: []
 
 mitigator:
   enabled: true
-  replicaCount: 1
-
   env:
     MODE: "mitigator"
-    IN_TOPIC: "test_topic"
-    OUT_TOPIC: "response_topic_v2"
+    IN_TOPIC: "mmt-reports"
+    OUT_TOPIC: "ulanc-response-mitigator"
     GROUP_ID: "stix-mitigator"
     CLIENT_ID: "stix-mitigator"
     AUTO_OFFSET_RESET: "latest"
     KEEP_ORIGINAL_BUNDLE_ID: "0"
-    DECIDED_BY: "bpm-pipeline"
+    DECIDED_BY: "ulanc-mitigator"
     DEFAULT_CONFIDENCE: "0.9"
     BLOCK_DURATION_SEC: "3600"
     PRINT_IO_JSON: "1"
-    PRINT_SUMMARY: "0"
-    MAX_JSON_CHARS: "0"
-
-  resources: {}
-  # resources:
-  #   requests:
-  #     cpu: 100m
-  #     memory: 128Mi
-  #   limits:
-  #     cpu: 500m
-  #     memory: 512Mi
+    PRINT_SUMMARY: "1"
+    MAX_JSON_CHARS: "12000"
 
 attackSimulator:
   enabled: false
-  replicaCount: 1
-
-  env:
-    MODE: "attack_simulator"
-    TOPIC: "test_topic"
-    CLIENT_ID: "attack-stix-simulator"
-    SLEEP_MIN: "1"
-    SLEEP_MAX: "3"
-    SRC_IP: "192.168.62.53"
-    DST_IP: "192.168.126.67"
-    PROBE_ID: "MMT-PROBE-1"
-    PROBE_NAME: "MMT-PROBE"
-
-  resources: {}
 
 responseConsumer:
-  enabled: false
-  replicaCount: 1
-
+  enabled: true
   env:
     MODE: "response_consumer"
-    TOPIC: "response_topic_v2"
+    TOPIC: "ulanc-response-mitigator"
     GROUP_ID: "response-consumer"
-    CLIENT_ID: "response-consumer"
     AUTO_OFFSET_RESET: "latest"
-
-  resources: {}
